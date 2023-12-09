@@ -5,8 +5,11 @@ function Synchronize-Folder {
         [string]$destinationFolder
     )
 
-    $sourceFiles = Get-ChildItem -Path $sourceFolder -Recurse | Where-Object { $_.Extension -ne '.ridf' -and $_.Extension -ne '.rid' }
-    
+    # get the list of files in the source folder
+    $sourceFiles = Get-ChildItem -Path $sourceFolder -Recurse | Where-Object { 
+        $_.Extension -ne '.ridf' -and $_.Extension -ne '.rid' }
+
+    # copy the files to the destination folder if they don't exist or are newer    
     foreach ($file in $sourceFiles) {
         # Ensure the correct relative path is computed
         $relativePath = $file.FullName.Substring($sourceFolder.Length).TrimStart('\')
@@ -14,6 +17,7 @@ function Synchronize-Folder {
         # Form the correct destination path
         $destinationPath = Join-Path $destinationFolder $relativePath
 
+        # Check if the file exists in the destination folder and if it is newer
         if (-not (Test-Path $destinationPath) -or ($file.LastWriteTime -gt (Get-Item $destinationPath).LastWriteTime)) {
             Copy-Item -Path $file.FullName -Destination $destinationPath -Force
         }
